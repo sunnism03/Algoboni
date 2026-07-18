@@ -8,6 +8,18 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/Scenes/SampleScene.unity
     guid: 99c9720ab356a0642a771bea13969a05
+  - enabled: 1
+    path: "Assets/\uCC44\uC740/Elevator.unity"
+    guid: 3d7f12ac01db92e4f823462d32cfcd72
+  - enabled: 1
+    path: "Assets/\uCC44\uC740/Floor 1.unity"
+    guid: c1c341fffc6915440b26e83b4d2c7b02
+  - enabled: 1
+    path: "Assets/\uCC44\uC740/Floor 2.unity"
+    guid: 2570bc9d24d5df943a57ffd7d8dd1729
+  - enabled: 1
+    path: "Assets/\uCC44\uC740/Floor 7.unity"
+    guid: 30c9db334f768704c924c3d5ed907603
   m_configObjects:
     com.unity.input.settings.actions: {fileID: -944628639613478452, guid: 052faaac586de48259a63d0c4782560b, type: 3}
     com.unity.xr.management.loader_settings: {fileID: 11400000, guid: a2190c6a5636a0e43b520a87e746c9ef, type: 2}
