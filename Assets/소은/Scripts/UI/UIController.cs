@@ -267,6 +267,23 @@ namespace Soeun.UI
                 ShowEntry(m_MissionPanel, entry, "미션", null);
         }
 
+        /// <summary>표시 시간을 직접 지정해서 미션 이미지를 띄운다.</summary>
+        public void ShowMission(string id, float duration) => ShowMission(id, duration, null);
+
+        /// <summary>표시 시간을 지정하고, 사라진 뒤 콜백을 받는다.</summary>
+        public void ShowMission(string id, float duration, Action onHidden)
+        {
+            var entry = Find(m_MissionLookup, id, "미션");
+            if (entry == null)
+            {
+                onHidden?.Invoke();
+                return;
+            }
+
+            m_MissionPanel?.Show(entry.sprite, duration, onHidden);
+            Log($"미션 \"{entry.id}\" 표시 (지속 {duration}초)");
+        }
+
         /// <summary>인스펙터 순서(0부터)로 미션 이미지를 띄운다.</summary>
         public void ShowMissionAt(int index)
         {

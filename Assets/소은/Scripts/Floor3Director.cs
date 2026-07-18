@@ -1,5 +1,4 @@
 using System.Collections;
-using Soeun.UI;
 using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.XR.Interaction.Toolkit.Interactables;
@@ -30,13 +29,6 @@ namespace Soeun.Floor3
 
         [Tooltip("바닥의 똥. 처음에는 잡을 수 없다가 강아지를 찾은 뒤 잡을 수 있게 된다.")]
         [SerializeField] XRGrabInteractable m_Poop;
-
-        [Header("UI 연결 테스트용 — 시나리오 나오면 정리한다")]
-        [Tooltip("UIController 인스펙터의 Dialogue Images 에 등록한 id. 비우면 호출하지 않는다.")]
-        [SerializeField] string m_TestDialogueId = "";
-
-        [Tooltip("UIController 인스펙터의 Mission Images 에 등록한 id. 비우면 호출하지 않는다.")]
-        [SerializeField] string m_TestMissionId = "";
 
         [Header("타이밍")]
         [Tooltip("강아지를 찾은 뒤 복귀 안내가 뜨기까지의 시간. 목걸이 연출 길이에 맞춘다.")]
@@ -97,16 +89,25 @@ namespace Soeun.Floor3
         void SetPoopGrabbable(bool grabbable)
         {
             if (m_Poop == null)
+            {
+                Debug.LogError("[3층연출] Poop 슬롯이 비어 있다. " +
+                    "인스펙터에서 똥 오브젝트를 드래그해라.", this);
                 return;
+            }
 
+            // XRGrabInteractable 만 껐다 켠다.
+            // 콜라이더를 끄면 리지드바디가 바닥을 뚫고 무한히 떨어지므로 절대 끄지 않는다.
             m_Poop.enabled = grabbable;
 
-            foreach (var col in m_Poop.GetComponentsInChildren<Collider>())
+            // 잡기 전에는 물리를 멈춰서 굴러가거나 밀려나지 않게 한다.
+            var rb = m_Poop.GetComponent<Rigidbody>();
+            if (rb != null)
             {
-                // 밟기 판정용 트리거 콜라이더는 건드리지 않는다.
-                if (!col.isTrigger)
-                    col.enabled = grabbable;
+                rb.isKinematic = !grabbable;
+                rb.useGravity = grabbable;
             }
+
+            Log($"똥 잡기 {(grabbable ? "허용" : "차단")} (위치: {m_Poop.transform.position})");
         }
 
         // ── 1단계: 엘리베이터 문 열림 ───────────────────────────────
@@ -133,31 +134,8 @@ namespace Soeun.Floor3
             m_Stage = Stage.Exploring;
             Log("② 일어남 → 자유 이동 시작");
 
-            ShowTestUI();
-
+            // UI 재생은 Floor3UISequencer 가 담당한다.
             onExploreStarted?.Invoke();
-        }
-
-        /// <summary>
-        /// UI 연결이 되는지 확인하는 예시.
-        /// 시나리오가 나오면 이 함수를 지우고 각 이벤트에 UI 호출을 연결하면 된다.
-        /// </summary>
-        void ShowTestUI()
-        {
-            if (UIController.instance == null)
-            {
-                Debug.LogWarning("[3층연출] UIController를 찾을 수 없다. " +
-                    "씬에 UIRoot 프리팹이 있는지 확인해라.", this);
-                return;
-            }
-
-            // 미션 UI — 층 시작할 때 띄우고 계속 유지 (duration 0이면 수동으로 꺼야 함)
-            if (!string.IsNullOrEmpty(m_TestMissionId))
-                UIController.instance.ShowMission(m_TestMissionId);
-
-            // 대화 UI — 등록한 duration 만큼 떴다가 자동으로 사라진다
-            if (!string.IsNullOrEmpty(m_TestDialogueId))
-                UIController.instance.ShowDialogue(m_TestDialogueId);
         }
 
         // ── 3단계: 강아지 무리 도착 ────────────────────────────────
