@@ -6,8 +6,8 @@ public class GameManager : MonoBehaviour
 {
     public static GameManager Instance { get; private set; }
 
-    [Header("현재 로드된 층 씬 이름")]
-    [SerializeField] private string currentFloorSceneName = "Floor 7";
+    [Header("층수 설정 (7층부터 1층까지 순서대로 다운)")]
+    [SerializeField] private int currentFloorNumber = 7;
 
     [Header("엘리베이터 상태 관리")]
     public bool isMissionCleared = false;   // 미션 성공 여부
@@ -33,6 +33,7 @@ public class GameManager : MonoBehaviour
     private Vector3 rightDoorOpenPos;
 
     private Coroutine doorCoroutine; // 중복 실행 방지용 코루틴 참조
+    private string currentFloorSceneName;
 
     private void Awake()
     {
@@ -46,6 +47,8 @@ public class GameManager : MonoBehaviour
             Destroy(gameObject);
             return;
         }
+
+        currentFloorSceneName = $"Floor {currentFloorNumber}";
 
         if (leftDoor != null && rightDoor != null)
         {
@@ -130,22 +133,22 @@ public class GameManager : MonoBehaviour
         doorCoroutine = StartCoroutine(MoveDoorsRoutine(false));
     }
 
-    public void OnPlayerEnteredElevator(string nextFloorName)
+    public void OnPlayerEnteredElevator()
     {
         if (!isMissionCleared || isTransitioning) return;
-        StartCoroutine(FloorTransitionRoutine(nextFloorName));
+        StartCoroutine(FloorTransitionRoutine());
     }
 
-    public void ChangeFloor(string nextFloorName)
+    public void ChangeFloor()
     {
         if (isTransitioning) return;
-        StartCoroutine(FloorTransitionRoutine(nextFloorName));
+        StartCoroutine(FloorTransitionRoutine());
     }
 
     /// <summary>
     /// 💡 암전 없이 엘리베이터 내부 시야를 유지한 채 씬만 교체하는 정밀 루틴
     /// </summary>
-    private IEnumerator FloorTransitionRoutine(string nextFloorName)
+    private IEnumerator FloorTransitionRoutine()
     {
         isTransitioning = true;
 
@@ -160,22 +163,34 @@ public class GameManager : MonoBehaviour
         Debug.Log($"🛗 엘리베이터 이동 연출 중... ({elevatorMoveDuration}초 대기)");
         yield return new WaitForSeconds(elevatorMoveDuration);
 
+        string oldFloorSceneName = currentFloorSceneName;
+
+        currentFloorNumber--; // 7층 -> 6층 -> ... -> 1층 순으로 감소
+        if (currentFloorNumber < 1)
+        {
+            currentFloorNumber = 1; // 1층 밑으로는 안 내려가게 방어벽
+            Debug.LogWarning("🚨 이미 최하층(1층)입니다!");
+        }
+
+        currentFloorSceneName = $"Floor {currentFloorNumber}";
+
         // [단계 3] 문 뒤에서 조용히 구형 층 씬을 언로드합니다.
-        AsyncOperation unloadOp = SceneManager.UnloadSceneAsync(currentFloorSceneName);
+        Debug.Log($"구형 씬 언로드: {oldFloorSceneName}");
+        AsyncOperation unloadOp = SceneManager.UnloadSceneAsync(oldFloorSceneName);
         while (!unloadOp.isDone)
         {
             yield return null; 
         }
 
         // [단계 4] 문 뒤에서 새로운 층 씬을 비동기로 로드합니다.
-        AsyncOperation loadOp = SceneManager.LoadSceneAsync(nextFloorName, LoadSceneMode.Additive);
+        Debug.Log($"신형 씬 비동기 로드: {currentFloorSceneName}");
+        AsyncOperation loadOp = SceneManager.LoadSceneAsync(currentFloorSceneName, LoadSceneMode.Additive);
         while (!loadOp.isDone)
         {
             yield return null; 
         }
 
         // [단계 5] 새로운 씬을 액티브 상태로 고정하고 데이터 상태 리셋
-        currentFloorSceneName = nextFloorName;
         Scene nextScene = SceneManager.GetSceneByName(currentFloorSceneName);
         SceneManager.SetActiveScene(nextScene);
 

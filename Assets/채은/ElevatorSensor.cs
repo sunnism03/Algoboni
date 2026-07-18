@@ -12,7 +12,7 @@ public class ElevatorSensor : MonoBehaviour
         if (other.CompareTag("Player") || other.GetComponentInChildren<Camera>() != null)
         {
             // 게임 매니저에게 플레이어가 들어왔다고 통보합니다.
-            GameManager.Instance.OnPlayerEnteredElevator(targetFloorSceneName);
+            GameManager.Instance.OnPlayerEnteredElevator();
         }
     }
 
