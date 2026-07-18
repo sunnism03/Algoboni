@@ -1,4 +1,5 @@
 using System.Collections;
+using Soeun.UI;
 using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.XR.Interaction.Toolkit.Interactables;
@@ -29,6 +30,13 @@ namespace Soeun.Floor3
 
         [Tooltip("바닥의 똥. 처음에는 잡을 수 없다가 강아지를 찾은 뒤 잡을 수 있게 된다.")]
         [SerializeField] XRGrabInteractable m_Poop;
+
+        [Header("UI 연결 테스트용 — 시나리오 나오면 정리한다")]
+        [Tooltip("UIController 인스펙터의 Dialogue Images 에 등록한 id. 비우면 호출하지 않는다.")]
+        [SerializeField] string m_TestDialogueId = "";
+
+        [Tooltip("UIController 인스펙터의 Mission Images 에 등록한 id. 비우면 호출하지 않는다.")]
+        [SerializeField] string m_TestMissionId = "";
 
         [Header("타이밍")]
         [Tooltip("강아지를 찾은 뒤 복귀 안내가 뜨기까지의 시간. 목걸이 연출 길이에 맞춘다.")]
@@ -125,7 +133,31 @@ namespace Soeun.Floor3
             m_Stage = Stage.Exploring;
             Log("② 일어남 → 자유 이동 시작");
 
+            ShowTestUI();
+
             onExploreStarted?.Invoke();
+        }
+
+        /// <summary>
+        /// UI 연결이 되는지 확인하는 예시.
+        /// 시나리오가 나오면 이 함수를 지우고 각 이벤트에 UI 호출을 연결하면 된다.
+        /// </summary>
+        void ShowTestUI()
+        {
+            if (UIController.instance == null)
+            {
+                Debug.LogWarning("[3층연출] UIController를 찾을 수 없다. " +
+                    "씬에 UIRoot 프리팹이 있는지 확인해라.", this);
+                return;
+            }
+
+            // 미션 UI — 층 시작할 때 띄우고 계속 유지 (duration 0이면 수동으로 꺼야 함)
+            if (!string.IsNullOrEmpty(m_TestMissionId))
+                UIController.instance.ShowMission(m_TestMissionId);
+
+            // 대화 UI — 등록한 duration 만큼 떴다가 자동으로 사라진다
+            if (!string.IsNullOrEmpty(m_TestDialogueId))
+                UIController.instance.ShowDialogue(m_TestDialogueId);
         }
 
         // ── 3단계: 강아지 무리 도착 ────────────────────────────────

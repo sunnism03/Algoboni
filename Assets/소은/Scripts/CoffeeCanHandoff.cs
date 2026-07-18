@@ -6,32 +6,41 @@ using UnityEngine.XR.Interaction.Toolkit.Interactables;
 namespace Soeun.Delivery
 {
     /// <summary>
-    /// 아저씨 손에 붙어 있던 캔커피를 플레이어가 잡는 순간 손에서 떼어내고,
-    /// 이후에는 일반 물체처럼 잡고 놓을 수 있게 만든다.
+    /// 아저씨 손에 붙어 있던 캔커피를 플레이어가 잡는 순간 손에서 떼어낸다.
+    /// 잡히기 전에는 물리를 꺼서 손에 붙어 있게 하고, 잡히면 일반 물체가 된다.
     /// XRGrabInteractable 과 같은 오브젝트에 붙인다.
     /// </summary>
     [RequireComponent(typeof(XRGrabInteractable))]
     public class CoffeeCanHandoff : MonoBehaviour
     {
-        [Tooltip("씬 전환 후에도 유지시킬지 여부. 체크하면 처음 잡는 순간 DontDestroyOnLoad 처리된다.")]
-        [SerializeField] bool m_PersistAcrossScenes = true;
+        [Header("물리")]
+        [Tooltip("잡히기 전까지 물리를 끈다. 이걸 끄면 잡기도 전에 캔이 바닥으로 떨어진다.")]
+        [SerializeField] bool m_FreezeUntilGrabbed = true;
+
+        [Tooltip("잡은 뒤 놓았을 때 바닥으로 떨어지게 할지. " +
+                 "해제하면 놓아도 그 자리에 그대로 떠 있는다.")]
+        [SerializeField] bool m_EnableGravityAfterGrab = true;
 
         [Header("디버그")]
         [Tooltip("체크하면 진행 상황을 Console에 출력한다.")]
         [SerializeField] bool m_VerboseLogging = true;
 
-        [Space]
+        [Header("이벤트")]
+        [Tooltip("플레이어가 커피를 처음 잡은 순간. 여기에 씬 종료 처리를 연결한다.")]
         public UnityEvent onFirstGrabbed;
+
+        [Tooltip("커피를 놓은 순간.")]
         public UnityEvent onReleased;
 
         XRGrabInteractable m_Grab;
         Rigidbody m_Rigidbody;
-        PersistentCarriedItem m_Persistent;
         bool m_Initialized;
         bool m_HasBeenGrabbed;
 
+        public bool hasBeenGrabbed => m_HasBeenGrabbed;
+
         /// <summary>
-        /// 다른 오브젝트의 Awake()에서 먼저 호출될 수 있으므로 초기화를 지연 실행한다.
+        /// DeliveryManController 의 Awake() 에서 먼저 호출될 수 있으므로 초기화를 지연 실행한다.
         /// (유니티는 오브젝트 간 Awake 순서를 보장하지 않는다.)
         /// </summary>
         void EnsureInitialized()
@@ -43,10 +52,9 @@ namespace Soeun.Delivery
 
             m_Grab = GetComponent<XRGrabInteractable>();
             m_Rigidbody = GetComponent<Rigidbody>();
-            m_Persistent = GetComponent<PersistentCarriedItem>();
 
-            // 아저씨 손에 붙어 있는 동안에는 물리를 끈다.
-            if (m_Rigidbody != null)
+            // 아저씨 손에 붙어 있는 동안에는 물리를 꺼둔다.
+            if (m_FreezeUntilGrabbed && m_Rigidbody != null)
             {
                 m_Rigidbody.isKinematic = true;
                 m_Rigidbody.useGravity = false;
@@ -113,26 +121,15 @@ namespace Soeun.Delivery
                 transform.SetParent(null, true);
             }
 
-            if (m_Rigidbody != null)
+            if (m_EnableGravityAfterGrab && m_Rigidbody != null)
                 m_Rigidbody.useGravity = true;
-
-            if (m_PersistAcrossScenes && m_Persistent != null)
-            {
-                m_Persistent.MarkAsCarried();
-                Log($"씬 전환 대비 등록 완료 (ID: {m_Persistent.itemId})");
-            }
-            else if (m_PersistAcrossScenes)
-            {
-                Debug.LogWarning("[캔커피] Persist Across Scenes가 켜져 있지만 " +
-                    "PersistentCarriedItem 컴포넌트가 없다. 씬 전환 시 사라진다.", this);
-            }
 
             onFirstGrabbed?.Invoke();
         }
 
         void HandleSelectExited(SelectExitEventArgs args)
         {
-            Log("놓음 → 중력 작용 시작.");
+            Log("놓음");
             onReleased?.Invoke();
         }
     }

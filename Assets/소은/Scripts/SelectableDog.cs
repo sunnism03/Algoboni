@@ -59,26 +59,42 @@ namespace Soeun.Floor3
         public UnityEvent onLeft;
 
         XRSimpleInteractable m_Interactable;
+        bool m_Initialized;
         bool m_Resolved;
 
         public bool isCulprit => m_IsCulprit;
         public bool isResolved => m_Resolved;
 
-        void Awake()
+        /// <summary>
+        /// DogSearchManager 의 Awake() 에서 먼저 호출될 수 있으므로 초기화를 지연 실행한다.
+        /// (유니티는 오브젝트 간 Awake 순서를 보장하지 않는다.)
+        /// </summary>
+        void EnsureInitialized()
         {
+            if (m_Initialized)
+                return;
+
+            m_Initialized = true;
+
             m_Interactable = GetComponent<XRSimpleInteractable>();
 
             if (m_MoveRoot == null)
                 m_MoveRoot = transform;
         }
 
+        void Awake() => EnsureInitialized();
+
         void OnEnable()
         {
+            EnsureInitialized();
             m_Interactable.selectEntered.AddListener(HandleSelected);
         }
 
         void OnDisable()
         {
+            if (m_Interactable == null)
+                return;
+
             m_Interactable.selectEntered.RemoveListener(HandleSelected);
         }
 
@@ -91,6 +107,7 @@ namespace Soeun.Floor3
         /// <summary>선택 가능 여부를 설정한다. 탐색 단계 전에는 꺼둔다.</summary>
         public void SetSelectable(bool selectable)
         {
+            EnsureInitialized();
             m_Interactable.enabled = selectable;
 
             foreach (var col in GetComponentsInChildren<Collider>())
