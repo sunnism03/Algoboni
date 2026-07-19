@@ -1,14 +1,9 @@
 fileFormatVersion: 2
-guid: 95f42ebee69114256b919528591a3028
+guid: 2db889c789d3f4daaa7bd5b9d813bf2f
 ModelImporter:
   serializedVersion: 24200
   internalIDToNameTable: []
-  externalObjects:
-  - first:
-      type: UnityEngine:Material
-      assembly: UnityEngine.CoreModule
-      name: PoopStain
-    second: {fileID: 2100000, guid: d3abdbd4125fd449d8c08cfbaa548171, type: 2}
+  externalObjects: {}
   materials:
     materialImportMode: 2
     materialName: 0
