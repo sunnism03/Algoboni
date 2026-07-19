@@ -2,6 +2,7 @@ using UnityEngine;
 using System.Collections;
 using UnityEngine.UI;
 using UnityEngine.Video;
+using Soeun.UI;
 
 public class Floor7Manager : MonoBehaviour
 {
@@ -86,6 +87,9 @@ public class Floor7Manager : MonoBehaviour
         if (fadeImage != null) fadeImage.gameObject.SetActive(false); // 완전히 밝아지면 캔버스 끄기
 
         yield return new WaitForSeconds(1.0f); // 밝아진 후 잠시 상황 인지 시간 주기
+
+        UIController.instance.PlayDialogueSequence(
+            new[] { "me1", "boss1", "me2", "system1" });
 
         // ==========================================
         // 2. 통화 단계: 상사의 불호령 & 휴대폰 AI 영상 재생

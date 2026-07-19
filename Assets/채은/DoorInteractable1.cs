@@ -1,4 +1,5 @@
 using System.Collections;
+using Soeun.UI;
 using UnityEngine;
 using UnityEngine.XR.Interaction.Toolkit;
 using UnityEngine.XR.Interaction.Toolkit.Interactables; // Unity 6 XRI 네임스페이스
@@ -57,6 +58,14 @@ public class DoorInteractable1 : MonoBehaviour
 
         transform.localRotation = targetRotation; // 미세 오차 보정 고정
         Debug.Log("✔ 문 경첩 축을 기준으로 완벽하게 열렸습니다.");
+
+        yield return new WaitForSeconds(2.0f);
+
+        if (UIController.instance != null)
+        {
+            UIController.instance.ShowDialogue("grandma2");
+        }
+        //GameManager.Instance.CompleteMission();
     }
 
     // --- VR 헤드셋 없을 때 에디터 컴포넌트 우클릭으로 강제 테스트용 ---
